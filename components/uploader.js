@@ -5,7 +5,8 @@ import {
   Image,
   View,
   WebView,
-  Alert
+  Alert,
+  TouchableOpacity
 } from 'react-native';
 import ImagePicker  from 'react-native-image-picker';
 import Clarifai from 'clarifai';
@@ -37,7 +38,8 @@ module.exports = React.createClass({
     return {
       imgSource: '',
       url: '',
-      tags: []
+      tags: [],
+      showOptions: false
     };
   },
   componentWillMount: function(){
@@ -80,8 +82,8 @@ module.exports = React.createClass({
           
           
           // Alert.alert(this.state.url);
-          this.props.setWebLink('https://www.pinterest.com/search/pins/?q='+tags[0]);
-          this.props.setWebView(true);
+          this.setState({url: tags[0]});
+          this.setState({showOptions: true});
 
         },
         function(error) {
@@ -92,16 +94,55 @@ module.exports = React.createClass({
       }
     });
   },
+  onPinterest: function() {
+    this.props.setWebLink('https://www.pinterest.com/search/pins/?q='+this.state.url);
+    this.props.setWebView(true);
+  },
+  onAllrecipes: function() {
+    this.props.setWebLink('http://allrecipes.com/search/results/?wt='+this.state.url);
+    this.props.setWebView(true);
+  },
+  onYummly: function() {
+    this.props.setWebLink('http://www.yummly.com/recipes?q='+this.state.url);
+    this.props.setWebView(true);
+  },
+  
   render: function(){
     return (
       <View style={styles.container}>
-        <Text style={styles.titleText} onPress={this.onGallery}>
+      <TouchableOpacity onPress={this.onGallery}>
+        <Text style={styles.titleText}>
           Select a picture
         </Text>
+      </TouchableOpacity>
         <Image 
         source={{uri: this.state.imgSource}}
         style={styles.logo}
          /> 
+        {
+          this.state.showOptions === true ? 
+          <TouchableOpacity onPress={this.onPinterest}>
+            <Text style={styles.titleText}>
+            Get Recipes from Pinterest
+            </Text>
+          </TouchableOpacity> : null
+        }
+        {
+          this.state.showOptions === true ? 
+          <TouchableOpacity onPress={this.onAllrecipes}>
+            <Text style={styles.titleText}>
+            Get Recipes from Allrecipes
+            </Text>
+          </TouchableOpacity> : null
+        }
+        {
+          this.state.showOptions === true ? 
+          <TouchableOpacity onPress={this.onYummly}>
+            <Text style={styles.titleText}>
+            Get Recipes from Yummly
+            </Text>
+          </TouchableOpacity> : null
+        }
       </View>
     );
   }
