@@ -11,7 +11,16 @@ import {
 import ImagePicker  from 'react-native-image-picker';
 import Clarifai from 'clarifai';
 import Credential from '../configs/keys.js';
+import {
+  Container, 
+  Content, 
+  Button,
+  Header,
+  Title
+} from 'native-base';
 
+import TagCheckbox from './tagCheckbox.js';
+import { Col, Row, Grid } from 'react-native-easy-grid';
 var styles = StyleSheet.create({
   baseText: {
     fontFamily: 'Cochin'
@@ -32,6 +41,7 @@ var styles = StyleSheet.create({
   }
 });
 
+var tagArr = [];
 
 module.exports = React.createClass({
   getInitialState: function() {
@@ -39,7 +49,8 @@ module.exports = React.createClass({
       imgSource: '',
       url: '',
       tags: [],
-      showOptions: false
+      showOptions: false,
+      isChecked: false
     };
   },
   componentWillMount: function(){
@@ -48,9 +59,6 @@ module.exports = React.createClass({
   onGallery: function() {
     var options = {
       title: 'Choose from',
-      customButtons: {
-        'Choose Photo from Facebook': 'fb',
-      },
       storageOptions: { 
         skipBackup: true, 
         path: 'images'
@@ -77,14 +85,18 @@ module.exports = React.createClass({
        this.setState({imgSource: response.uri});
         Clarifai.getTagsByImageBytes(response.data, {'model': 'food-items-v0.1'}).then(
         (res) => {
-
+          let arr = [];
           let tags = res.results[0].result.tag.classes;
-          
-          
-          // Alert.alert(this.state.url);
-          this.setState({url: tags[0]});
-          this.setState({showOptions: true});
+          for(let i = 0; i < tags.length; i++){
+            let obj = {};
+            obj.tag = tags[i];
+            obj.isChecked=false;
+            tagArr[i] = obj;
+          };
 
+          this.setState({tags:arr});
+          this.setState({url:tags[0].tag});
+          this.setState({showOptions: true});
         },
         function(error) {
           console.error(error);
@@ -106,44 +118,51 @@ module.exports = React.createClass({
     this.props.setWebLink('http://www.yummly.com/recipes?q='+this.state.url);
     this.props.setWebView(true);
   },
-  
+  setCheck: function(index) {
+    tagArr[index].isChecked = !tagArr[index].isChecked;
+    Alert.alert(tagArr[index].isChecked.toString());
+  },
+ 
   render: function(){
     return (
-      <View style={styles.container}>
-      <TouchableOpacity onPress={this.onGallery}>
-        <Text style={styles.titleText}>
-          Select a picture
-        </Text>
-      </TouchableOpacity>
-        <Image 
-        source={{uri: this.state.imgSource}}
-        style={styles.logo}
-         /> 
-        {
-          this.state.showOptions === true ? 
-          <TouchableOpacity onPress={this.onPinterest}>
-            <Text style={styles.titleText}>
-            Get Recipes from Pinterest
-            </Text>
-          </TouchableOpacity> : null
-        }
-        {
-          this.state.showOptions === true ? 
-          <TouchableOpacity onPress={this.onAllrecipes}>
-            <Text style={styles.titleText}>
-            Get Recipes from Allrecipes
-            </Text>
-          </TouchableOpacity> : null
-        }
-        {
-          this.state.showOptions === true ? 
-          <TouchableOpacity onPress={this.onYummly}>
-            <Text style={styles.titleText}>
-            Get Recipes from Yummly
-            </Text>
-          </TouchableOpacity> : null
-        }
-      </View>
+      <Container>
+        <Header><Title>Foodifai</Title></Header>
+        <Content>
+          <Grid>
+            <Row  style={{backgroundColor:'red'}}>
+              <Col size={25}></Col>
+              <Col size={50}>
+                <Button block primary onPress={this.onGallery}>
+                Select a picture
+                </Button>
+                <Image 
+                source={{uri: this.state.imgSource}}
+                style={styles.logo}
+                 /> 
+              </Col>
+              <Col size={25}></Col>
+            </Row>
+            <Row>
+              {
+              this.state.showOptions === true ?
+             
+              <TagCheckbox tags={tagArr} setCheck={this.setCheck}
+              /> : null
+              }
+              
+             
+            </Row>
+            <Row  style={{backgroundColor:'yellow'}}>
+            {
+              this.state.showOptions === true ?
+              <Button block success onPress={this.onPinterest}>
+              Get Recipes!
+              </Button> : null
+            }   
+            </Row>
+          </Grid>
+        </Content>
+      </Container>
     );
   }
 });
